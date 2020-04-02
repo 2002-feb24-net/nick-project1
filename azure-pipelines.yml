@@ -21,10 +21,15 @@ pool:
 # on windows it'll run in command prompt
 # give all steps a good display name
 steps:
-- script: echo Hello, world!
-  displayName: Print hello world
 
-- script: |
-    echo "Showing current directory contents"
-    ls
-  displayName: Show directory contents
+# - script: echo Hello, world!
+#   displayName: Print hello world
+
+# - script: |
+#     echo "Showing current directory contents"
+#     ls
+#   displayName: Show directory contents
+
+- script: dotnet build
+  # workingDirectory: 'MyProject1Folder'
+  displayName: dotnet build
