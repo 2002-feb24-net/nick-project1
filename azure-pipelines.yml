@@ -31,5 +31,4 @@ steps:
 #   displayName: Show directory contents
 
 - script: dotnet build
-  # workingDirectory: 'MyProject1Folder'
   displayName: dotnet build
