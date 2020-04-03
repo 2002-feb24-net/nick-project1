@@ -1,4 +1,12 @@
 trigger:
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+    - README.md
+
+pr:
 - master
 
 stages:
@@ -14,7 +22,7 @@ stages:
   - job: build
 
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: ubuntu-latest
 
     steps:
 
@@ -25,21 +33,23 @@ stages:
       inputs:
         command: publish
         publishWebProjects: true
-        arguments: '-c $(buildConfiguration) -o publish'
+        arguments: -c $(buildConfiguration) -o publish
         zipAfterPublish: true
       displayName: dotnet publish
 
     - publish: publish
       artifact: app
+      displayName: Publish artifact app
 
   - job: test
 
     pool:
-      vmImage: 'windows-latest'
+      vmImage: windows-latest
     
     steps:
 
     - script: dotnet test $(solutionPath) -c $(buildConfiguration) --collect:"XPlat Code Coverage" --logger trx
+      continueOnError:
       displayName: dotnet test
 
     - task: PublishTestResults@2
@@ -50,19 +60,22 @@ stages:
       displayName: Publish test results to build
       
     - task: PublishCodeCoverageResults@1
+      condition: succeededOrFailed()
       inputs:
         codeCoverageTool: Cobertura
         summaryFileLocation: $(solutionPath)/**/coverage.cobertura.xml
-      displayName: Publish code coverage
+      displayName: Publish code coverage to build
 
 - stage: deploy
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  dependsOn: build
 
   jobs:
 
   - job: deploy
 
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: ubuntu-latest
     
     steps:
     
