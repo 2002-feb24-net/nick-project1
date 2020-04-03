@@ -34,7 +34,7 @@ namespace RestaurantReviews.WebUI
             }
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args)
+        // public static IHostBuilder CreateHostBuilder(string[] args)
         {
             return Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
