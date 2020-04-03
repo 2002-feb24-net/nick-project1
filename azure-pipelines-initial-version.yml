@@ -1,0 +1,70 @@
+# Azure Pipelines YAML documentation
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema
+
+# this file defines a set of jobs that will run when triggered on a cloned version of your repo.
+# a job is a set of steps
+# by default, ther'es just one job, and you give it its list of steps
+
+# by default, all branches get built
+# but adding a trigger configuration like this says "only build master branch"
+trigger:
+- master
+
+# a pool is a set of machines for running this job.
+# this configuration says: "use Microsoft's hosted Ubuntu Linux virtual machines"
+# (we could, if we wanted, have it connect to a machine WE control to run the job on)
+pool:
+  vmImage: 'ubuntu-latest'
+
+# the steps in the job
+# "script" is one kind of step - on linux it'll run in bash
+# on windows it'll run in command prompt
+# give all steps a good display name
+steps:
+
+# - script: echo Hello, world!
+#   displayName: Print hello world
+
+# - script: |
+#     echo "Showing current directory contents"
+#     ls
+#   displayName: Show directory contents
+
+- script: dotnet build
+  displayName: dotnet build
+
+# - script: dotnet test
+#   # continueOnError: true
+#   displayName: dotnet test
+
+# we can publish test results to azure pipelines
+# have the build agent (the machine running the steps)
+# notify azure pipelines of that useful info to keep alongside the build logs
+
+# apart from script, there's also "task" steps.
+# a task step implements common build operations that would be clumsy
+# to write out by hand in a script step.
+
+- script: dotnet test --logger trx
+  displayName: dotnet test
+
+# the default "condition" for every step is "succeeded()" - run this step if the previous step succeeded
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testRunner: VSTest
+    testResultsFiles: '**/*.trx'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    publishWebProjects: true
+
+# this task looks for a zip file and deploys it to azure app service.
+- task: AzureRmWebAppDeployment@4
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: 'Pay-As-You-Go(0518cd5b-d389-4983-9496-cdcae31dcc60)'
+    appType: 'webApp'
+    WebAppName: 'restaurant-reviews-escalera'
+    packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
