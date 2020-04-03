@@ -65,6 +65,8 @@ stages:
         scannerMode: MSBuild
         projectKey: 2002-feb24-net_nick-project1
         projectName: nick-project1
+        extraProperties: |
+          sonar.exclusions=**/lib/**
       displayName: sonarcloud analysis prepare
 
     - script: dotnet build $(solutionPath)
