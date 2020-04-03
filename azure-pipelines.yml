@@ -15,7 +15,7 @@ stages:
   displayName: build
 
   variables:
-    sdkVersion: 3.x
+    sdkVersion: 3.1.x
     solutionPath: .
     buildConfiguration: Release
 
