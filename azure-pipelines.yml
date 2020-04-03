@@ -33,11 +33,11 @@ stages:
       inputs:
         command: publish
         publishWebProjects: true
-        arguments: -c $(buildConfiguration) -o publish
+        arguments: -c $(buildConfiguration) -o publish-output
         zipAfterPublish: true
       displayName: dotnet publish
 
-    - publish: publish
+    - publish: publish-output
       artifact: app
       displayName: Publish artifact app
 
@@ -81,6 +81,7 @@ stages:
     
     - download: current
       artifact: app
+      displayName: Download app artifact
 
     - task: AzureRmWebAppDeployment@4
       inputs:
