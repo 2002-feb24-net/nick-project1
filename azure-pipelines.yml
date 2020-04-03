@@ -15,6 +15,7 @@ stages:
   displayName: build
 
   variables:
+    sdkVersion: 3.x
     solutionPath: .
     buildConfiguration: Release
 
@@ -27,6 +28,12 @@ stages:
       vmImage: ubuntu-latest
 
     steps:
+
+    - task: UseDotNet@2
+      inputs:
+        packageType: sdk
+        version: $(sdkVersion)
+      displayName: dotnet $(sdkVersion)
 
     - task: DotNetCoreCLI@2
       inputs:
@@ -50,6 +57,12 @@ stages:
       vmImage: ubuntu-latest
 
     steps:
+
+    - task: UseDotNet@2
+      inputs:
+        packageType: sdk
+        version: $(sdkVersion)
+      displayName: dotnet $(sdkVersion)
 
     - script: dotnet test $(solutionPath)
         --configuration $(buildConfiguration)
