@@ -49,7 +49,7 @@ stages:
     steps:
 
     - script: dotnet test $(solutionPath) -c $(buildConfiguration) --collect:"XPlat Code Coverage" --logger trx
-      continueOnError:
+      continueOnError: true
       displayName: dotnet test
 
     - task: PublishTestResults@2
