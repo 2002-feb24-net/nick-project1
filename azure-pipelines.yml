@@ -12,7 +12,6 @@ pr:
 stages:
 
 - stage: build
-  displayName: build
 
   variables:
     sdkVersion: 3.1.x
@@ -22,7 +21,6 @@ stages:
   jobs:
 
   - job: build
-    displayName: build
 
     pool:
       vmImage: ubuntu-latest
@@ -51,12 +49,19 @@ stages:
       displayName: artifact publish app
 
   - job: test
-    displayName: test
 
     pool:
       vmImage: ubuntu-latest
 
     steps:
+
+    # disabled because of bug in SonarCloudPrepare task
+    - task: UseDotNet@2
+      enabled: false
+      inputs:
+        packageType: sdk
+        version: $(sdkVersion)
+      displayName: dotnet $(sdkVersion)
 
     - task: SonarCloudPrepare@1
       inputs:
@@ -104,14 +109,12 @@ stages:
       displayName: sonarcloud results build publish
 
 - stage: deploy
-  displayName: deploy
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
   dependsOn: build
 
   jobs:
 
   - deployment: deploy_dev
-    displayName: deploy dev
 
     pool:
       vmImage: ubuntu-latest
