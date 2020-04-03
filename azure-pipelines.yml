@@ -81,10 +81,6 @@ stages:
   - deployment: deploy_dev
     displayName: deploy dev
 
-    variables:
-      azureSubscription: Pay-As-You-Go(0518cd5b-d389-4983-9496-cdcae31dcc60)
-      webAppName: restaurant-reviews-escalera
-
     pool:
       vmImage: ubuntu-latest
 
@@ -102,8 +98,8 @@ stages:
           - task: AzureRmWebAppDeployment@4
             inputs:
               ConnectionType: AzureRM
-              azureSubscription: $(azureSubscription)
+              azureSubscription: Pay-As-You-Go(0518cd5b-d389-4983-9496-cdcae31dcc60)
               appType: webApp
-              WebAppName: $(webAppName)
+              WebAppName: restaurant-reviews-escalera
               packageForLinux: $(Pipeline.Workspace)/app
             displayName: Deploy to Azure App Service
