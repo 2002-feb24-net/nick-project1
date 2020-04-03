@@ -34,7 +34,7 @@ stages:
         command: publish
         publishWebProjects: true
         arguments: -c $(buildConfiguration) -o publish-output
-        zipAfterPublish: true
+        zipAfterPublish: false
       displayName: dotnet publish
 
     - publish: publish-output
@@ -44,50 +44,63 @@ stages:
   - job: test
 
     pool:
-      vmImage: windows-latest
-    
+      vmImage: ubuntu-latest
+
     steps:
 
-    - script: dotnet test $(solutionPath) -c $(buildConfiguration) --collect:"XPlat Code Coverage" --logger trx
+    - script: dotnet test $(solutionPath)
+        --configuration $(buildConfiguration)
+        --collect "XPlat Code Coverage"
+        --logger trx
+        --results-directory test-output
       continueOnError: true
       displayName: dotnet test
 
     - task: PublishTestResults@2
-      condition: succeededOrFailed()
       inputs:
         testRunner: VSTest
-        testResultsFiles: $(solutionPath)/**/*.trx
+        testResultsFiles: test-output/*.trx
       displayName: Publish test results to build
-      
+
     - task: PublishCodeCoverageResults@1
-      condition: succeededOrFailed()
       inputs:
         codeCoverageTool: Cobertura
-        summaryFileLocation: $(solutionPath)/**/coverage.cobertura.xml
+        summaryFileLocation: test-output/*/coverage.cobertura.xml
       displayName: Publish code coverage to build
 
 - stage: deploy
+  displayName: deploy
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
   dependsOn: build
 
   jobs:
 
-  - job: deploy
+  - deployment: deploy-dev
+    displayName: deploy dev
+
+    variables:
+      azureSubscription: Pay-As-You-Go(0518cd5b-d389-4983-9496-cdcae31dcc60)
+      webAppName: restaurant-reviews-escalera
 
     pool:
       vmImage: ubuntu-latest
-    
-    steps:
-    
-    - download: current
-      artifact: app
-      displayName: Download app artifact
 
-    - task: AzureRmWebAppDeployment@4
-      inputs:
-        ConnectionType: AzureRM
-        azureSubscription: Pay-As-You-Go(0518cd5b-d389-4983-9496-cdcae31dcc60)
-        appType: webApp
-        WebAppName: restaurant-reviews-escalera
-        packageForLinux: $(Pipeline.Workspace)/app/*.zip
-      displayName: Deploy to Azure App Service
+    environment: dev
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - download: current
+            artifact: app
+            displayName: Download app artifact
+
+          - task: AzureRmWebAppDeployment@4
+            inputs:
+              ConnectionType: AzureRM
+              azureSubscription: $(azureSubscription)
+              appType: webApp
+              WebAppName: $(webAppName)
+              packageForLinux: $(Pipeline.Workspace)/app
+            displayName: Deploy to Azure App Service
