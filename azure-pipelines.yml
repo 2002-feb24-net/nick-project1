@@ -12,6 +12,7 @@ pr:
 stages:
 
 - stage: build
+  displayName: build
 
   variables:
     solutionPath: .
@@ -20,6 +21,7 @@ stages:
   jobs:
 
   - job: build
+    displayName: build
 
     pool:
       vmImage: ubuntu-latest
@@ -33,15 +35,16 @@ stages:
       inputs:
         command: publish
         publishWebProjects: true
-        arguments: -c $(buildConfiguration) -o publish-output
+        arguments: -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/publish
         zipAfterPublish: false
       displayName: dotnet publish
 
-    - publish: publish-output
+    - publish: $(Build.ArtifactStagingDirectory)/publish
       artifact: app
       displayName: Publish artifact app
 
   - job: test
+    displayName: test
 
     pool:
       vmImage: ubuntu-latest
@@ -52,20 +55,20 @@ stages:
         --configuration $(buildConfiguration)
         --collect "XPlat Code Coverage"
         --logger trx
-        --results-directory test-output
+        --results-directory $(Common.TestResultsDirectory)
       continueOnError: true
       displayName: dotnet test
 
     - task: PublishTestResults@2
       inputs:
         testRunner: VSTest
-        testResultsFiles: test-output/*.trx
+        testResultsFiles: $(Common.TestResultsDirectory)/*.trx
       displayName: Publish test results to build
 
     - task: PublishCodeCoverageResults@1
       inputs:
         codeCoverageTool: Cobertura
-        summaryFileLocation: test-output/*/coverage.cobertura.xml
+        summaryFileLocation: $(Common.TestResultsDirectory)/*/coverage.cobertura.xml
       displayName: Publish code coverage to build
 
 - stage: deploy
@@ -75,7 +78,7 @@ stages:
 
   jobs:
 
-  - deployment: deploy-dev
+  - deployment: deploy_dev
     displayName: deploy dev
 
     variables:
