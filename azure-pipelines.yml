@@ -35,13 +35,16 @@ stages:
       inputs:
         command: publish
         publishWebProjects: true
-        arguments: -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/publish
+        arguments:
+          --configuration $(buildConfiguration)
+          --output $(Build.ArtifactStagingDirectory)/publish
+        modifyOutputPath: false
         zipAfterPublish: false
       displayName: dotnet publish
 
     - publish: $(Build.ArtifactStagingDirectory)/publish
       artifact: app
-      displayName: Publish artifact app
+      displayName: artifact publish app
 
   - job: test
     displayName: test
@@ -63,13 +66,13 @@ stages:
       inputs:
         testRunner: VSTest
         testResultsFiles: $(Common.TestResultsDirectory)/*.trx
-      displayName: Publish test results to build
+      displayName: test results build publish
 
     - task: PublishCodeCoverageResults@1
       inputs:
         codeCoverageTool: Cobertura
         summaryFileLocation: $(Common.TestResultsDirectory)/*/coverage.cobertura.xml
-      displayName: Publish code coverage to build
+      displayName: code coverage build publish
 
 - stage: deploy
   displayName: deploy
@@ -93,7 +96,7 @@ stages:
 
           - download: current
             artifact: app
-            displayName: Download app artifact
+            displayName: artifact download app
 
           - task: AzureRmWebAppDeployment@4
             inputs:
@@ -102,4 +105,4 @@ stages:
               appType: webApp
               WebAppName: restaurant-reviews-escalera
               packageForLinux: $(Pipeline.Workspace)/app
-            displayName: Deploy to Azure App Service
+            displayName: azure app service deploy
