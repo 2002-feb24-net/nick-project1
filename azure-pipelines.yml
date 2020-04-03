@@ -73,10 +73,15 @@ stages:
         projectName: nick-project1
       displayName: sonarcloud analysis prepare
 
+    - script: dotnet build $(solutionPath)
+        --configuration $(buildConfiguration)
+      displayName: dotnet build
+
     - script: dotnet test $(solutionPath)
         --configuration $(buildConfiguration)
         --collect "XPlat Code Coverage"
         --logger trx
+        --no-build
         --results-directory $(Common.TestResultsDirectory)
       continueOnError: true
       displayName: dotnet test
@@ -85,18 +90,21 @@ stages:
       displayName: sonarcloud analysis run
 
     - task: PublishTestResults@2
+      condition: succeededOrFailed()
       inputs:
         testRunner: VSTest
         testResultsFiles: $(Common.TestResultsDirectory)/*.trx
       displayName: test results build publish
 
     - task: PublishCodeCoverageResults@1
+      condition: succeededOrFailed()
       inputs:
         codeCoverageTool: Cobertura
         summaryFileLocation: $(Common.TestResultsDirectory)/*/coverage.cobertura.xml
       displayName: code coverage build publish
     
     - task: SonarCloudPublish@1
+      condition: succeededOrFailed()
       displayName: sonarcloud results build publish
 
 - stage: deploy
