@@ -1,70 +1,74 @@
-# Azure Pipelines YAML documentation
-# https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema
-
-# this file defines a set of jobs that will run when triggered on a cloned version of your repo.
-# a job is a set of steps
-# by default, ther'es just one job, and you give it its list of steps
-
-# by default, all branches get built
-# but adding a trigger configuration like this says "only build master branch"
 trigger:
 - master
 
-# a pool is a set of machines for running this job.
-# this configuration says: "use Microsoft's hosted Ubuntu Linux virtual machines"
-# (we could, if we wanted, have it connect to a machine WE control to run the job on)
-pool:
-  vmImage: 'ubuntu-latest'
+stages:
 
-# the steps in the job
-# "script" is one kind of step - on linux it'll run in bash
-# on windows it'll run in command prompt
-# give all steps a good display name
-steps:
+- stage: build
 
-# - script: echo Hello, world!
-#   displayName: Print hello world
+  jobs:
 
-# - script: |
-#     echo "Showing current directory contents"
-#     ls
-#   displayName: Show directory contents
+  - job: build
 
-- script: dotnet build
-  displayName: dotnet build
+    pool:
+      vmImage: 'ubuntu-latest'
 
-# - script: dotnet test
-#   # continueOnError: true
-#   displayName: dotnet test
+    steps:
 
-# we can publish test results to azure pipelines
-# have the build agent (the machine running the steps)
-# notify azure pipelines of that useful info to keep alongside the build logs
+    - script: dotnet build
+      displayName: dotnet build
 
-# apart from script, there's also "task" steps.
-# a task step implements common build operations that would be clumsy
-# to write out by hand in a script step.
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: publish
+        publishWebProjects: true
+        zipAfterPublish: true
+      displayName: dotnet publish + zip
 
-- script: dotnet test --logger trx
-  displayName: dotnet test
+    - publish: '**/*.zip'
+      artifact: app
 
-# the default "condition" for every step is "succeeded()" - run this step if the previous step succeeded
-- task: PublishTestResults@2
-  condition: succeededOrFailed()
-  inputs:
-    testRunner: VSTest
-    testResultsFiles: '**/*.trx'
+  - job: test
 
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'publish'
-    publishWebProjects: true
+    pool:
+      vmImage: 'windows-latest'
+    
+    steps:
 
-# this task looks for a zip file and deploys it to azure app service.
-- task: AzureRmWebAppDeployment@4
-  inputs:
-    ConnectionType: 'AzureRM'
-    azureSubscription: 'Pay-As-You-Go(0518cd5b-d389-4983-9496-cdcae31dcc60)'
-    appType: 'webApp'
-    WebAppName: 'restaurant-reviews-escalera'
-    packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    - script: dotnet test --collect:"XPlat Code Coverage" --logger trx
+      displayName: dotnet test
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VSTest
+        testResultsFiles: '**/*.trx'
+      displayName: Publish test results to build
+      
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '**/coverage.cobertura.xml'
+      displayName: Publish code coverage
+
+- stage: deploy
+
+  jobs:
+
+  - job: deploy
+
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    
+    - download: current
+      artifact: app
+
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        ConnectionType: AzureRM
+        azureSubscription: Pay-As-You-Go(0518cd5b-d389-4983-9496-cdcae31dcc60)
+        appType: webApp
+        WebAppName: restaurant-reviews-escalera
+        packageForLinux: '**/*.zip'
+      displayName: Deploy to Azure App Service
