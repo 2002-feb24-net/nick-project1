@@ -64,6 +64,15 @@ stages:
         version: $(sdkVersion)
       displayName: dotnet $(sdkVersion)
 
+    - task: SonarCloudPrepare@1
+      inputs:
+        SonarCloud: sonarcloud-escalonn
+        organization: 2002-feb24-net
+        scannerMode: MSBuild
+        projectKey: 2002-feb24-net_nick-project1
+        projectName: nick-project1
+      displayName: sonarcloud analysis prepare
+
     - script: dotnet test $(solutionPath)
         --configuration $(buildConfiguration)
         --collect "XPlat Code Coverage"
@@ -71,6 +80,9 @@ stages:
         --results-directory $(Common.TestResultsDirectory)
       continueOnError: true
       displayName: dotnet test
+
+    - task: SonarCloudAnalyze@1
+      displayName: sonarcloud analysis run
 
     - task: PublishTestResults@2
       inputs:
@@ -83,6 +95,9 @@ stages:
         codeCoverageTool: Cobertura
         summaryFileLocation: $(Common.TestResultsDirectory)/*/coverage.cobertura.xml
       displayName: code coverage build publish
+    
+    - task: SonarCloudPublish@1
+      displayName: sonarcloud results build publish
 
 - stage: deploy
   displayName: deploy
