@@ -22,7 +22,7 @@ stages:
         command: publish
         publishWebProjects: true
         arguments: '-o publish'
-        # zipAfterPublish: true
+        zipAfterPublish: true
       displayName: dotnet publish
 
     - publish: publish
@@ -71,5 +71,5 @@ stages:
         azureSubscription: Pay-As-You-Go(0518cd5b-d389-4983-9496-cdcae31dcc60)
         appType: webApp
         WebAppName: restaurant-reviews-escalera
-        packageForLinux: app
+        packageForLinux: app/*.zip
       displayName: Deploy to Azure App Service
