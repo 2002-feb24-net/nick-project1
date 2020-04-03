@@ -10,6 +10,8 @@
 trigger:
 - master
 
+pr: none
+
 # a pool is a set of machines for running this job.
 # this configuration says: "use Microsoft's hosted Ubuntu Linux virtual machines"
 # (we could, if we wanted, have it connect to a machine WE control to run the job on)
