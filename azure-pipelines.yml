@@ -32,3 +32,7 @@ steps:
 
 - script: dotnet build
   displayName: dotnet build
+
+- script: dotnet test
+  # continueOnError: true
+  displayName: dotnet test
