@@ -67,6 +67,7 @@ stages:
         projectName: nick-project1
         extraProperties: |
           sonar.exclusions=**/lib/**
+          sonar.cs.opencover.reportsPaths=$(Common.TestResultsDirectory)/*/coverage.opencover.xml
       displayName: sonarcloud analysis prepare
 
     - script: dotnet build $(solutionPath)
@@ -75,10 +76,10 @@ stages:
 
     - script: dotnet test $(solutionPath)
         --configuration $(buildConfiguration)
-        --collect "XPlat Code Coverage"
         --logger trx
         --no-build
         --results-directory $(Common.TestResultsDirectory)
+        --settings coverlet.runsettings
       continueOnError: true
       displayName: dotnet test
 
