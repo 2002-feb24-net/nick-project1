@@ -5,17 +5,28 @@ FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
 
 WORKDIR /app
 
+# when docker goes through a dockerfile's steps, it keeps track of all the "inputs"
+# to each given line.
+COPY *.sln ./
+COPY RestaurantReviews.WebUI/*.csproj RestaurantReviews.WebUI/
+COPY RestaurantReviews.Domain/*.csproj RestaurantReviews.Domain/
+COPY RestaurantReviews.DataAccess/*.csproj RestaurantReviews.DataAccess/
+COPY RestaurantReviews.Tests/*.csproj RestaurantReviews.Tests/
+
+RUN dotnet restore
+
+# so long as the csproj/sln files haven't changed, we'll always cache up to this point.
+# saves on build time!
+
+# now copy everything else so we can build
 COPY . ./
 
-RUN dotnet publish RestaurantReviews.WebUI -o publish
+RUN dotnet publish RestaurantReviews.WebUI -o publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
 
 WORKDIR /app
 
 COPY --from=build /app/publish ./
-
-# set environment variable on the image
-ENV ConnectionStrings__RestaurantReviewsDb="don't do this"
 
 CMD [ "dotnet", "RestaurantReviews.WebUI.dll" ]
