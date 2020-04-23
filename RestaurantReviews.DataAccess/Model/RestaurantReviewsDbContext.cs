@@ -13,6 +13,7 @@ namespace RestaurantReviews.DataAccess.Model
         public RestaurantReviewsDbContext(DbContextOptions<RestaurantReviewsDbContext> options)
             : base(options)
         {
+            // Database.EnsureCreated();
         }
 
         public virtual DbSet<Restaurant> Restaurant { get; set; }

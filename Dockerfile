@@ -1,7 +1,9 @@
 # 1. docker build -t rest-reviews:3.0 .
 # 2. docker run --rm -it -p 8000:80 -e "ConnectionStrings__RestaurantReviewsDb=(connection string)" rest-reviews:3.0
 
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
+# because this arg is here, i could build like: docker build --build-arg DOTNET_VERSION=latest .
+ARG DOTNET_VERSION=3.1
+FROM mcr.microsoft.com/dotnet/core/sdk:${DOTNET_VERSION} AS build
 
 WORKDIR /app
 
@@ -28,5 +30,7 @@ FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
 WORKDIR /app
 
 COPY --from=build /app/publish ./
+
+EXPOSE 80
 
 CMD [ "dotnet", "RestaurantReviews.WebUI.dll" ]
